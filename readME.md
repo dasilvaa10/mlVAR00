@@ -123,7 +123,7 @@ list(temporal = combined_ests$temporal$t_value, contemporaneous = combined_ests$
     ## freldis 0.05466549 2.538301       NaN
 
 ## Compare the test-statistics from the imputed data to the complete dataset
-In this 3 variable model we are looking at 21 different associates in total over 3 different networks (9 temporal, 6 contemporaneous, 6 between-subject). We can see that the conclusions drawn would be the exact same in the imputed data relative to the complete data in 20/21 pairings, the only expection being a weak temporal relationship where "fwkdis" predicts "fwkstrs" dissapearing.
+In this 3 variable model we are looking at 21 different associates in total over 3 different networks (9 temporal, 6 contemporaneous, 6 between-subject). We can see that the conclusions drawn would be the exact same in the imputed data relative to the complete data in 20/21 pairings, the only expection being a weak temporal relationship where "fwkdis" predicts "fwkstrs" disappearing.
 
 ``` r
 completeData <- mlVAR00(dat = simData, scale = TRUE, variables = vars, ID = "id", temporal = "correlated", contemporaneous = "correlated")
