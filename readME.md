@@ -99,7 +99,7 @@ bootImp <- foreach(i=1:length(imps)) %dopar% par_mlVAR00(dat = imps[[i]], scale 
 ## Combine the estimates
 
 ``` r
-combined_ests <- rubin_combine(bootImp, m =length(imps))
+combined_ests <- mlVAR_rubin(bootImp, m =length(imps))
 
 list(temporal = combined_ests$temporal$t_value, contemporaneous = combined_ests$contemporaneous_network$t_value, betweenSubjects = combined_ests$`between-subjects_network`$t_value)
 ```
