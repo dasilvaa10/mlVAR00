@@ -1,4 +1,10 @@
-# from https://github.com/SachaEpskamp/mlVAR
+#' @Title Function to force a matrix to be positive.
+#' @name forcePositive
+#' @author Sacha Epskamp,  https://github.com/SachaEpskamp/mlVAR
+#' @return A positive matrix
+#' 
+#' @param x data matrix
+
 
 forcePositive <- function(x){
   x <- (x + t(x))/2
