@@ -1,4 +1,16 @@
+#' @Title Function to restructure data for fitting of multilevel vector autoregressive models.
+#' @name format_mlvar
+#' @author Alex daSilva
+#' @return A formatted data frame
+#' 
+#' @param dat raw data to be formatted
+#' @param scale should data be standardized?
+#' @param timeVar is there a variable containing temporal information
+
+
 format_mlVAR <- function(dat, scale = FALSE, timeVar = NULL){
+  
+  #dealing with temporal variable, assuming one doesn't want it centered/scaled
   
   if (is.null(timeVar) == FALSE){
     
@@ -20,6 +32,8 @@ format_mlVAR <- function(dat, scale = FALSE, timeVar = NULL){
     
   }
   
+  #standardize data
+  
   if (scale == TRUE) {
     
     id_ind <- grep("ID", colnames(dat))
@@ -27,6 +41,9 @@ format_mlVAR <- function(dat, scale = FALSE, timeVar = NULL){
     dat[, - id_ind] <- scale(dat[, - id_ind])
     
   }
+  
+  #split data by subject and format to be input to vector autoregressive models
+  #also perform within-subject centering creating within and between subject variables
   
   varNames <- colnames(dat)[!(colnames(dat) %in% c("ID"))]
   

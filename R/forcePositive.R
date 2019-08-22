@@ -7,6 +7,7 @@
 
 
 forcePositive <- function(x){
+  
   x <- (x + t(x))/2
   
   if (any(eigen(x)$values < 0)){

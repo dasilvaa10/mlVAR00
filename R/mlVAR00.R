@@ -1,4 +1,26 @@
+#' @Title Function to fit vector autoregressive models.
+#' @name mlVAR00
+#' @author Alex daSilva
+#' @return A list of lists containing network results, formatted data, and underlying lme4 models
+#' 
+#' @param dat time-varying longituindal data to analyze
+#' @param scale whether or not to standardized data
+#' @param variables list of variables to analyze
+#' @param ID name of id variable
+#' @param temporal specifies random effects strucutre for first set of models. Can be "correlated", "interceptsOnly", or "orthogonal". Default is "correlated"
+#' @param contemporaneous specifies random effects strucutre for second set of models. Can be "correlated", or "orthogonal". Default is "correlated"
+#' @param timeVar name of temporal variable
+#' @param timePoly option to add nth order polynomial terms for temporal variable
+#' @param timeRandom should random effects be included for temporal variable
+#' 
+#' @importFrom MASS ginv
+#' @importFrom lme4 lmer
+#' @importFrom corpcor pseudoinverse
+
+
 mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = "correlated", contemporaneous = "correlated", timeVar = NULL, timePoly = NULL, timeRandom = FALSE, silenceLMER = TRUE ) {
+  
+  #variable specification and data formatting
   
   if (ID %in% colnames(dat) == FALSE){
     
@@ -44,9 +66,10 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     
   }
   
-  ###poly calc
+  #if temporal variable is included, specify nth order polynomial effects
   
   if (is.null(timePoly) == FALSE){
+    
     
     if (is.null(timeVar) == FALSE & timePoly > 1) {
       
@@ -68,6 +91,10 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     
   }  
   
+  formatted_data <- na.omit(formatted_data)
+  
+  #fit and first set of models; temporal and between network coefficients obtained
+  
   temporalModels <- list()
   
   temporalModelsResids <- list()
@@ -82,7 +109,11 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   for (i in 1:length(varNames)){
     
+    #begin by specifying random effect structure
+    
     trait2rm <- paste("btwn", varNames[i], sep = "_")
+    
+    #maximal random effect structure
     
     if (temporal == "correlated") {
       
@@ -100,9 +131,13 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
       
       reffsFrm <- paste("+(",paste(reffs, collapse = "+"), "|ID)", sep = "")
       
+      #random intercept only
+      
     } else if (temporal == "interceptOnly") {
       
       reffsFrm <- "+(1|ID)"
+      
+      #orthogonal random effects
       
     } else if (temporal == "orthogonal") {
       
@@ -118,6 +153,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
         
       }
       
+      #create formula for random effects portion of model
+      
       reffs_temp <- paste(paste("(0 +", reffs), "| ID)")
       
       reffs_temp <- paste(reffs_temp, collapse = "+")
@@ -131,6 +168,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
       stop("temporal parameter not valid")
       
     }
+    
+    # obtain the variables to be used as fixed effects
     
     feffs <- colnames(formatted_data)[!(colnames(formatted_data) %in% c(trait2rm, varNames, "ID"))]
     
@@ -152,11 +191,19 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     #   
     # }
     
+    #fixed effects portion of formula
+    
     feffsFrm <- paste(feffs, collapse = "+")
+    
+    #set i-th variable as the dependent variable
     
     dep <- paste(varNames[i], "~", sep = "")
     
+    #final complete formula to pass to lmer
+    
     frmla <- as.formula(paste(dep, feffsFrm, reffsFrm))
+    
+    #silence warnings
     
     if (silenceLMER == TRUE) {
       
@@ -168,11 +215,17 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
       
     }
     
+    #extract coefficients, ts, and ses
+    
     temporalSummary[[i]]<- est_extract(mod)
+    
+    #save residuals for next set of models
     
     modResids <- residuals(mod)
     
     temporalModelsResids[[i]] <- modResids
+    
+    #save model itself
     
     temporalModels[[i]] <- mod
     
@@ -184,9 +237,9 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   names(temporalModels) <- varNames
   
-  mark <- length(varNames) - 1
+  #mark <- length(varNames) - 1
   
-  ind <- mark * (mark + 1)
+  #ind <- mark * (mark + 1)
   
   btwn_coefs <- list()
   
@@ -195,6 +248,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   win_coefs <- list()
   
   win_ses <- list()
+  
+  #get beta estimates and standard errors, separate between temporal and between-subject networks
   
   for (i in 1:length(varNames)){
     
@@ -216,7 +271,7 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     
   }  
   
-  ### get between estimates
+  #get t-stats and pvalues for between-subjects network
   
   btwnMeanMat <- dat2mat(btwn_coefs, ind = length(varNames), temporal = FALSE, varNames = varNames)
   
@@ -230,7 +285,7 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   names(between_subjects) <- c("means", "SES", "T", "P")
   
-  ### same for temporal
+  #get t-stats and pvalues for temporal network
   
   temporalMeanMat <- dat2mat(win_coefs, ind = length(varNames), temporal = TRUE, varNames = varNames)
   
@@ -244,9 +299,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   names(temporal) <- c("means", "SES", "T-value", "P-value")
   
-  ### get cor and pcor for between
-  
-  ### from https://github.com/SachaEpskamp/mlVAR
+  #get cor and pcor for between-subjects network
+  #from https://github.com/SachaEpskamp/mlVAR
   
   mu_SD <- sapply(temporalModels, function(x) attr(lme4::VarCorr(x)[[1]], "stddev")[1])  #gets the intercept stddev
   
@@ -264,15 +318,16 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   btwn_cor <- cov2cor(btwn_cov)
   
-  ###
+  btwn_pcor <- cor2pcor(btwn_cor, type = "cor")
   
-  btwn_pcor <- cor2pcor(btwn_cor)
+  #store betas, ses, ts, ps, cors, and pcors in a list
   
   between_subjects <- list(btwnMeanMat, btwnSESMat, btwnTmat, btwnPmat, btwn_cor, btwn_pcor)
   
   names(between_subjects) <- c("means", "SES", "T-value", "P-value", "cor", "pcor")
   
-  ###Contemporaneous estimates
+  #estimate contemporaneous network
+  #create data from residuals
   
   contempDat <- do.call("cbind", temporalModelsResids)
   
@@ -288,13 +343,22 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   pb <- txtProgressBar(min = 0, max = length(varNames), style = 3)
   
+  #begin model fitting
+  
   for ( i in 1:length(varNames)){
     
+    #set variable i as dependent variable
+    
     dep <- varNames[i]
+    
+    #get fixed effects
     
     fixeffs <- varNames[!(varNames %in% dep)]
     
     dep <- paste(dep, "~", sep = "")
+    
+    #formatting formulas for fixed effects
+    #if only 2 variables used, no need to collapse
     
     if (length(fixeffs) <= 1) {
       
@@ -308,11 +372,17 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     
     fixeffsFrm  <- paste("0", fixeffsFrm, sep  = "+")
     
+    #maximal random effects
+    
     if (contemporaneous == "correlated") {
       
       raneffsFrm <- paste(paste("(0", fixeffs, sep = "+"), "|ID)", sep = "")
       
+      #orthogonal random effects
+      
     } else if (contemporaneous == "orthogonal"){
+      
+      #formatting random effects formula
       
       reffs_temp <- paste(paste("(0 +", fixeffs), "| ID)")
       
@@ -326,6 +396,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     
     #frmla <- as.formula(paste(paste(dep, fixeffsFrm, sep = ""), raneffsFrm, sep = "+"))
     
+    #complete formula
+    
     frmla <- as.formula(paste(paste(dep, fixeffsFrm, sep = ""), paste(raneffsFrm, collapse = "+"), sep = "+"))
     
     if (silenceLMER == TRUE) {
@@ -338,7 +410,11 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
       
     }
     
+    #store model
+    
     contempModels[[i]] <- mod
+    
+    #extract betas, ses, ts
     
     contempSummary[[i]]<- est_extract(mod)
     
@@ -354,6 +430,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   contemp_ses <-list()
   
+  #grab betas and ses
+  
   for ( i in 1:length(varNames)) {
     
     contemp_coefs[[i]] <-  contempSummary[[i]]$Estimate
@@ -361,6 +439,8 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
     contemp_ses[[i]] <- contempSummary[[i]]$`Std. Error`
     
   }
+  
+  #get t-stats and pvalues for temporal network
   
   contempMeanMat <- dat2mat(contemp_coefs, ind = length(varNames), temporal = FALSE, varNames = varNames)
   
@@ -370,7 +450,9 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   contempPmat <- 2*(1-pnorm(abs(contempTmat)))
   
-  ### from https://github.com/SachaEpskamp/mlVAR
+  #get cors and pcors for contemporaneous network
+  # from https://github.com/SachaEpskamp/mlVAR
+  
   D <- diag(1/sapply(contempModels,sigma)^2)
   
   inv <- D %*% (diag(length(varNames)) - contempMeanMat)
@@ -385,21 +467,27 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   contemp_cor <- cov2cor(contemp_cov)
   
-  contemp_pcor <- cor2pcor(contemp_cor)
+  contemp_pcor <- cor2pcor(contemp_cor, type = "cor")
   
-  ###
+  #store betas, ses, ts, ps, cors, and pcors in list
   
   contemporaneous <- list(contempMeanMat, contempSESMat, contempTmat, contempPmat, contemp_cor, contemp_pcor )
   
   names(contemporaneous) <- c("means", "SES", "T-value", "P-value", "cor", "pcor" )
   
+  #store results from 3 network analyses
+  
   results <-list(temporal, between_subjects, contemporaneous)
   
   names(results) <- c("temporal", "between-subjects", "contemporaneous")
   
+  #only saving 2 types of models as temporal/between are estimated in one shot
+  
   models <- list(temporalModels, contempModels)
   
   names(models) <- c("temporal", "contemporaneous")
+  
+  #save results, models and the formatted data frame
   
   list2return <- list( results, models, formatted_data)
   

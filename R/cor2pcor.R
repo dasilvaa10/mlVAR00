@@ -1,47 +1,61 @@
 #' @Title Function to convert a correlation matrix into a partial correlation matrix.
 #' @name cor2pcor
-#' @author Alex daSilva, BAsed on G. Jay Kerns, Ph.D., Youngstown State University (http://tolstoy.newcastle.edu.au/R/e2/help/07/08/22816.html)
+#' @author Alex daSilva
 #' @return A matrix containing partial correlations
 #' 
-#' @param cormat a matrix of correlations
+#' @param x either raw data or a correlation matrix
+#' @param type indicates whether the data are raw or a correlation matrix
 #' @importFrom MASS ginv
  
 
-
-cor2pcor <- function(cormat) {
+PCOR <- function(x, type = c("raw", "cor")) {
   
-  X <- cormat 
+  #check type, if raw, calculate correlation matrix
   
-  iX <- MASS::ginv(X) 
+  type <- match.arg(type)
   
-  S2 <- diag(diag((iX^-1)))
+  if (type == "raw") {
+    
+    x <- scale(x)
+    
+    R <- (t(x) %*% x) / (nrow(x) - 1)
+    
+  } else  {
+    
+    R <- x
+    
+  }
   
-  # anti-image covariance matrix
+  #calulcate anti-image correlation matrix
   
-  AIS <- S2%*%iX%*%S2 
+  ind <- unique(dim(R))
   
-  # image covariance matrix
+  R_inv <- ginv(R)
   
-  IS <- X+AIS-2*S2 
+  ZM <- matrix(rep(0, len = (ind*ind)), nrow = ind)
   
-  Dai <- sqrt(diag(diag(AIS)))
+  diag(ZM) <- diag(R_inv)
   
-  # image correlation matrix
+  D <- ginv(ZM)
   
-  IR <- MASS::ginv(Dai)%*%IS%*%MASS::ginv(Dai)  
+  AICOV <- D %*% R_inv %*% D
   
-  AIR <- MASS::ginv(Dai)%*%AIS%*%MASS::ginv(Dai)  
+  diag(ZM) <- diag(AICOV)
   
-  pcor <- AIR
+  D  <- ginv(sqrt(ZM))
   
-  # negatives to partial correlation
+  AICOR <- D %*% AICOV %*% D
+  
+  pcor <- AICOR
+  
+  #multiply a negative through to get partial correlations
   
   pcor[upper.tri(pcor)] <- -pcor[upper.tri(pcor)]
   
   pcor[lower.tri(pcor)] <- -pcor[lower.tri(pcor)]
   
-  #return the partial correlation matrix
+  dimnames(pcor) <- list(colnames(R), colnames(R))
   
   return(pcor)
   
-}
+}  

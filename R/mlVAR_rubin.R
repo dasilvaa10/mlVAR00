@@ -1,3 +1,12 @@
+#' @Title Function to pool mlVAR models under multiple imputation framework .
+#' @name mlVAR_rubin
+#' @author Alex daSilva
+#' @return A list of lists containing pooled network data
+#' 
+#' @param data_list list of coefficients from network models
+#' @param m number of imputed data sets, equal to the length of data_list
+
+
 mlVAR_rubin <- function(data_list, m){
   
   current_network_list <- list()
@@ -27,7 +36,7 @@ mlVAR_rubin <- function(data_list, m){
     ses <- lapply(temp_nets, `[[`, "ses" )
     
     # get 40 means and ses for the first variable e.g [1,1] or [1] and continue to pooled p_value
-    # return tvals, rubin se, and pooled p values
+    # return beta value, tvals, rubin se, and pooled p values
     
     m_o_m <- double()
     
@@ -43,15 +52,25 @@ mlVAR_rubin <- function(data_list, m){
       
       current_var <- sapply(ses, `[[`, i)^2
       
+      # between imputation variance
+      
       btwn_variance <- var(current_mean)
+      
+      # withing imputation variance
       
       win_variance <- mean(current_var)
       
+      # pooled variance
+      
       total_var <- win_variance + btwn_variance + (btwn_variance/m)
+      
+      # pooled point estimate
       
       meanOFmeans <- mean(current_mean)
       
       t_pooled <- meanOFmeans / sqrt(total_var)
+      
+      #calculate degrees of freedom
       
       lambda  <- (btwn_variance + (btwn_variance / m)) / total_var
       
@@ -68,6 +87,8 @@ mlVAR_rubin <- function(data_list, m){
       pooled_p[i] <- pooled_pval
       
     }
+    
+    # matrices of information to return
     
     m_o_m_mat <- matrix(m_o_m, nrow = ind, ncol = ind, dimnames = list(rn,cn))
     
