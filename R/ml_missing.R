@@ -26,7 +26,7 @@ ml_missing <- function(dat, variables, temporalVar, ID, ranSeq) {
     
     jList <- list()
     
-    nTime <- unique(sapply(datSplit[[i]], nrow))
+    nTime <- nrow(datSplit[[i]])
     
     # for variable (on the i-th subject) randomly remove a portion of the data vector
     
