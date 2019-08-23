@@ -3,7 +3,7 @@
 #' @author Alex daSilva
 #' @return A matrix of within centered values and a mean repeated between subject value
 #' 
-#' @param x data matrix
+#' @param x data vector
 #' @param name character, variable name 
 
 

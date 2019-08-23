@@ -8,7 +8,7 @@
 #' @importFrom MASS ginv
  
 
-PCOR <- function(x, type = c("raw", "cor")) {
+cor2pcor <- function(x, type = c("raw", "cor")) {
   
   #check type, if raw, calculate correlation matrix
   
