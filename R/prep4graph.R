@@ -7,7 +7,7 @@
 #' @importFrom Matrix forceSymmetric
 
 
-prep4graph < - function(x) {
+prep4graph <- function(x) {
    
    graph_dataOut <- list()
    
