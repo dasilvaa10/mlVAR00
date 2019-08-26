@@ -3,11 +3,13 @@
 #' @author Alex daSilva
 #' @return A list of lists containing properly formatted matrices, entries are 0 if the relationship is not significant
 #' 
-#' @param x a list of pooled imputations returned from 'mlVAR_rubin'
+#' @param x a list of pooled imputations returned from 'mlVAR_rubin' or a list of analyzed data from 'mlVAR00'
+#' @param type are the data pooled imputations (imputed) or a complete case analyzed by mlVAR00
+#' 
 #' @importFrom Matrix forceSymmetric
 
 
-prep4graph <- function(x) {
+prep4graph <- function(x, type = c("imputed", "complete")) {
    
    graph_dataOut <- list()
    
@@ -15,13 +17,23 @@ prep4graph <- function(x) {
      
      # get current network
      
-     ps <- x[[j]][["pooled_p"]]
+     if (type == "imputed") {
+       
+       ps <- x[[j]][["pooled_p"]]
+       
+       ests <- x[[j]][["m_o_m"]]
+       
+     } else {
+       
+      ps <-  x[[1]][[j]][["P-value"]]
+       
+      ests <- x[[1]][[j]][["means"]] 
+      
+     }
      
      # find sig relationships
      
      inds <- which(ps < .05)
-     
-     ests <- x[[j]][["m_o_m"]]
      
      out <- double()
      
@@ -72,7 +84,16 @@ prep4graph <- function(x) {
      
    }
    
-   names(graph_dataOut) <- names(x)
+   if (type == "imputed") {
+     
+     names(graph_dataOut) <- names(x)
+     
+   } else {
+     
+     names(graph_dataOut) <- names(x[[1]])
+     
+   }
+   
    
    return(graph_dataOut)
    
