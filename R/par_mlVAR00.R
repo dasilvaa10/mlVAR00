@@ -50,9 +50,9 @@ par_mlVAR00 <- function(dat, variables, ID, rfStructure = list("correlated", "co
   
   names(between_dat) <- c("means","ses")
   
-  networks <- list(temporal_dat, contemporaneous_dat, between_dat, fit)
+  networks <- list(temporal_dat, between_dat, contemporaneous_dat, fit)
   
-  names(networks) <- c("temporal", "contemporaneous", "between-subjects", "mlVar00_object")
+  names(networks) <- c("temporal", "between-subjects", "contemporaneous" , "mlVar00_object")
   
   return(networks)
   
