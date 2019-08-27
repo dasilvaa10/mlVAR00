@@ -104,7 +104,35 @@ mlVAR_rubin <- function(data_list, m){
     
   }
   
-  names(current_network_list) <- c("temporal", "contemporaneous", "between")
+  #get pcors for contemporaneous and between networks and take the average
+  
+  get_pcors <- lapply(lapply(data_list, `[[`, "mlVar_object"), `[[`, "results")
+  
+  contemp_pcors <- list()
+  
+  between_pcors <- list()
+  
+  for (i in 1:length(get_pcors)){
+    
+    contemp_pcors[[i]] <- get_pcors[[i]][["contemporaneous"]][["pcor"]]
+    
+    between_pcors[[i]] <- get_pcors[[i]][["between-subjects"]][["pcor"]]
+    
+  }
+  
+  contemp_pcor_mean <- Reduce("+", contemp_pcors) / length(contemp_pcors)
+  
+  dimnames(contemp_pcor_mean) <- list(rn, cn)
+  
+  between_pcor_mean <- Reduce("+", between_pcors) / length(between_pcors)
+  
+  dimnames(between_pcor_mean) <- list(rn, cn)
+  
+  current_network_list <- append(current_network_list, list(contemp_pcor_mean))
+  
+  current_network_list <- append(current_network_list, list(between_pcor_mean))
+  
+  names(current_network_list) <- c("temporal", "contemporaneous", "between", "contemporaneous_pcors", "between_pcors")
   
   return(current_network_list)
   
