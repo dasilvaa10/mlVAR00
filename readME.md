@@ -63,8 +63,10 @@ We’ll now use the function “par_mlVAR00” this calls the main function “m
 ``` r
 doParallel::registerDoParallel(7)
 
-bootImp <- foreach(i=1:length(imps)) %dopar% par_mlVAR00(dat = imps[[i]], scale = TRUE, variables = c("fwkstrs", "fwkdis", "freldis"), ID = "ID", 
-                                                        rfStructure = c("correlated", "correlated"), timeArgs = list(NULL, NULL, FALSE))
+bootImp <- foreach(i=1:length(imps)) %dopar% par_mlVAR00(dat = imps[[i]], scale = TRUE, 
+														variables = c("fwkstrs", "fwkdis", "freldis"), ID = "ID", 
+                                                        rfStructure = c("correlated", "correlated"), 
+                                                        timeArgs = list(NULL, NULL, FALSE))
 ```
 
 ## Combine the estimates using mlVAR_rubin
@@ -130,7 +132,9 @@ completeData <- mlVAR00(dat = dat, scale = TRUE, variables = c("fwkstrs", "fwkdi
       |=================================================================| 100%
 
 ``` r
-list(temporal = completeData$results$temporal$`T-value`,  betweenSubjects = completeData$results$`between-subjects`$`T-value`, contemporaneous = completeData$results$contemporaneous$`T-value`)
+list(temporal = completeData$results$temporal$`T-value`, 
+ 	betweenSubjects = completeData$results$`between-subjects`$`T-value`,
+ 	contemporaneous = completeData$results$contemporaneous$`T-value`)
 ```
 
     ## $temporal
