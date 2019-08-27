@@ -8,32 +8,61 @@
 #' 
 #' @importFrom Matrix forceSymmetric
 
+  
+######need to add funtionality to get pcors and average; then update prep4graph!!!!!!!!
 
 prep4graph <- function(x, type = c("imputed", "complete")) {
    
    graph_dataOut <- list()
    
-   for (j in 1:length(x)) {
+   if (type == "imputed") {
      
-     # get current network
+     varNames <- names(x)[1:3]
      
-     if (type == "imputed") {
-       
-       ps <- x[[j]][["pooled_p"]]
-       
-       ests <- x[[j]][["m_o_m"]]
-       
-     } else {
-       
-      ps <-  x[[1]][[j]][["P-value"]]
-       
-      ests <- x[[1]][[j]][["means"]] 
+   } else {
+     
+     varNames <- names(x[[1]])
+     
+   }
+   
+   #Grab the appropriate estimates (pcors for contemp, between; betas for temporal) to be used in graphing
+   
+   if (type == "imputed") {
       
-     }
+      ests <- list(x[["temporal"]][["m_o_m"]], x[["between_pcors"]], x[["contemporaneous_pcors"]])
+      
+      ps <- list(x[["temporal"]][["pooled_p"]], x[["between-subjects"]][["pooled_p"]], x[["contemporaneous"]][["pooled_p"]])
+      
+   } else {
+      
+      ests <- list(x[[1]][["temporal"]][["means"]], x[[1]][["between-subjects"]][["pcor"]], x[[1]][["contemporaneous"]][["pcor"]])
+      
+      ps <- list(x[[1]][["temporal"]][["P-value"]], x[[1]][["between-subjects"]][["P-value"]], x[[1]][["contemporaneous"]][["P-value"]])
+      
+   }
+   
+  
+   for (j in 1:length(varNames)) {
+     
+     # # get current network
+     # 
+     # if (type == "imputed") {
+     #   
+     #   ps <- x[[j]][["pooled_p"]]
+     #   
+     #   ests <- x[[j]][["m_o_m"]]
+     #   
+     # } else {
+     #   
+     #  ps <-  x[[1]][[j]][["P-value"]]
+     #   
+     #  ests <- x[[1]][[j]][["means"]] 
+     #  
+     # }
      
      # find sig relationships
      
-     inds <- which(ps < .05)
+     inds <- which(ps[[j]] < .05)
      
      out <- double()
      
@@ -42,11 +71,11 @@ prep4graph <- function(x, type = c("imputed", "complete")) {
      
      if (length(inds) != 0) {
        
-       for (i in 1:length(c(ps))) {
+       for (i in 1:length(c(ps[[j]]))) {
          
          if (i %in% inds) {
            
-           out[i]  <- c(ests)[i]
+           out[i]  <- c(ests[[j]])[i]
            
          } else {
            
@@ -58,7 +87,7 @@ prep4graph <- function(x, type = c("imputed", "complete")) {
        
      } else {
        
-       out <- rep(0, length(c(ps)))
+       out <- rep(0, length(c(ps[[j]])))
        
      }
      
@@ -74,26 +103,34 @@ prep4graph <- function(x, type = c("imputed", "complete")) {
      
      #vector to matrix
      
-     graphIN <- matrix(out, nrow = dim(ps)[1], dim(ps)[2], byrow = TRUE, dimnames = dimnames(ps)) 
+     graphIN <- matrix(out, nrow = dim(ps[[j]])[1], dim(ps[[j]])[2], byrow = FALSE, dimnames = dimnames(ps[[j]])) 
      
-     #force symmetric for qgraph
+     #force symmetric for qgraph, if contemp or btwn
      
-     graphIN <- Matrix::forceSymmetric(graphIN)
+     if (varNames[j] != "temporal") {
+       
+       graphIN <- Matrix::forceSymmetric(graphIN)
+       
+     } else {
+       
+       graphIN <- graphIN
+       
+     }
      
      graph_dataOut[[j]] <- t(graphIN)
+     #graph_dataOut[[j]] <- graphIN
      
    }
    
    if (type == "imputed") {
      
-     names(graph_dataOut) <- names(x)
+     names(graph_dataOut) <- varNames
      
    } else {
      
-     names(graph_dataOut) <- names(x[[1]])
+     names(graph_dataOut) <- varNames
      
    }
-   
    
    return(graph_dataOut)
    
