@@ -157,7 +157,7 @@ list(temporal = completeData$results$temporal$`T-value`,
 
 
 ## Visualizing the networks
-The function "prep4graph" takes in either a list of combined imputed data or the results of a normal "mlVAR00" analysis and prepares it to be input into the "qgraph" package for visualization. Here, we'll graph the imputed data and the complete data below.
+The function "prep4graph" takes in either a list of combined imputed data or the results of a normal "mlVAR00" analysis and prepares it to be input into the "qgraph" package for visualization. Here, we'll graph the imputed data (top) and the complete data (bottom).
 
 ``` r
 toGraph <- prep4graph(combined_ests, type  = "imputed")
@@ -166,9 +166,9 @@ toGraph_complete <- prep4graph(completeData, type = "complete")
 ```
 
 
-![](https://raw.githubusercontent.com/dasilvaa10/mlVAR00/master/img/complete_graph.png)
+![Imputed](https://raw.githubusercontent.com/dasilvaa10/mlVAR00/master/img/imp_graph.png)
 
-![](https://raw.githubusercontent.com/dasilvaa10/mlVAR00/master/img/imp_graph.png)
+![Complete](https://raw.githubusercontent.com/dasilvaa10/mlVAR00/master/img/complete_graph.png)
 
 
 ## Including temporal information
