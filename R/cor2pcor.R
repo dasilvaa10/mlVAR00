@@ -30,19 +30,19 @@ cor2pcor <- function(x, type = c("raw", "cor")) {
   
   ind <- unique(dim(R))
   
-  R_inv <- ginv(R)
+  R_inv <- MASS::ginv(R)
   
   ZM <- matrix(rep(0, len = (ind*ind)), nrow = ind)
   
   diag(ZM) <- diag(R_inv)
   
-  D <- ginv(ZM)
+  D <- MASS::ginv(ZM)
   
   AICOV <- D %*% R_inv %*% D
   
   diag(ZM) <- diag(AICOV)
   
-  D  <- ginv(sqrt(ZM))
+  D  <- MASS::ginv(sqrt(ZM))
   
   AICOR <- D %*% AICOV %*% D
   
