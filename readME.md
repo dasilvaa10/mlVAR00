@@ -46,7 +46,7 @@ sum(apply(datMiss_formatted, 1, anyNA)) / nrow(datMiss)
 
     ## [1] 0.8661905
 
-## Impute with Amelia
+### Impute with Amelia
 
 One of the strengths of mixed models are their robustness to missing data. However, in my experience, the "shift" created by looking at lagged relationships results in too much missing data to ingnore. Thus, we impute the missing data using Amelia. Below is one of the most simple imputations one can do with Amelia. Along with speed, Amelia’s strength is it’s ability to incorporate temporal information into the imputation model along with a host of other prior information. Further, Amelia has been shown to possess both solid imputation accuracy and model prediction accuracy relative to other imputation methods (kim et al, 2019).
 
@@ -56,7 +56,7 @@ a_out <- Amelia::amelia(datMiss, cs = "ID", ts = "time" , intercs = TRUE , m = 1
 imps <- a_out$imputations
 ```
 
-## Analyze each imputed dataset
+### Analyze each imputed dataset
 
 We’ll now use the function “par_mlVAR00” this calls the main function “mlVAR00” to fit network models and store the resulting relevant information needed to create estimates from the imputed datasets (Rubin,1987).
 
@@ -67,7 +67,7 @@ bootImp <- foreach(i=1:length(imps)) %dopar% par_mlVAR00(dat = imps[[i]], scale 
                                                         rfStructure = c("correlated", "correlated"), timeArgs = list(NULL, NULL, FALSE))
 ```
 
-## Combine the estimates using mlVAR_rubin
+### Combine the estimates using mlVAR_rubin
 
 ``` r
 combined_ests <- mlVAR_rubin(bootImp, m = length(imps))
@@ -95,8 +95,10 @@ list(temporal = combined_ests$temporal$t_value,
     ## fwkdis  4.168510      NaN 4.471184
     ## freldis 4.892881 4.700831      NaN
 
-## Compare the test-statistics from the imputed data to the complete dataset
-In this 3 variable model we are looking at 21 different associations in total (from a series of univariate multilevel models) over 3 different networks (9 temporal, 6 contemporaneous, 6 between-subject). We can see that the conclusions drawn would be the exact same in the imputed data relative to the complete data in 20/21 pairings, the only expection being a weak temporal relationship where "fwkdis" predicts "fwkstrs" disappearing.
+### Compare the test-statistics from the imputed data to the complete dataset
+In this 3 variable model we are looking at 21 different associations in total (from a series of univariate multilevel models) over 3 different networks (9 temporal, 6 contemporaneous, 6 between-subject). We can see that the conclusions drawn would be the exact same in the imputed data relative to the complete data in 20/21 pairings, the only expection being a weak temporal relationship where "fwkdis" predicts "fwkstrs" disappearing. 
+
+In the contemporaneous network, on a given day, all the variables are positively related. If you have more work distress, you have more relationship distress and work stress. Only one of these relationships remain in the between-subjects network. On average, people who have higher levels of relationship satisfaction tend to have higher levels of work dissatisfaction. There is one weak relationship present in the temporal network for the complete data. If you have higher levels of work dissatisfication on day t-1, you have higher levels of work stress on day t.  
 
 ``` r
 completeData <- mlVAR00(dat = dat, scale = TRUE, variables = c("fwkstrs", "fwkdis", "freldis"), ID = "id", 
@@ -154,7 +156,7 @@ list(temporal = completeData$results$temporal$`T-value`,
     ## freldis 4.774537 4.777671      NaN
 
 
-## Visualizing the networks
+### Visualizing the networks
 The function "prep4graph" takes in either a list of combined imputed data or the results of a normal "mlVAR00" analysis and prepares it to be input into the "qgraph" package for visualization. Here, we'll graph the imputed data (top) and the complete data (bottom).
 
 ``` r
@@ -169,7 +171,7 @@ toGraph_complete <- prep4graph(completeData, type = "complete")
 ![Complete](https://raw.githubusercontent.com/dasilvaa10/mlVAR00/master/img/complete_graph.png)
 
 
-## Including temporal information
+### Including temporal information
 Finally, temporal information can be included in the model through the “time” arguments. We can now  fit another model - this time including time and time^2 as additional fixed effects along with their respective random slopes.
 
 ``` r
