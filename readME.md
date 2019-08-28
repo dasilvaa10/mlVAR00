@@ -5,9 +5,9 @@ Work in progress:
 
 A set of tools building off the mlVAR package (https://github.com/SachaEpskamp/mlVAR), a package that fits multilevel vector autoregressive models. These models are extremely useful for analyzing continuous intensively collected longitudinal data. Extending gaussian graphical models to muiltilevel data, they allow you to extract temporal (lagged relationships), contemporaneous (relationships on a given measurement period), and between-subjects (trait level relationships) networks from the data. The functions here contain a bit of added functionality for dealing with missing data via multiple imputation in addition to providing more flexibility when dealing with the effect of "time".
 
-#Demo
+# Demo
 
-## Create some missing data with the 'ml_missing' function
+### Create some missing data with the 'ml_missing' function
 
 Using a longitudinal dataset from Intensive Longitudinal Methods: An Introduction to Diary and Experience Sampling Research (Bolger & Laurenceau), we’ll randomly create some missingness to illustrate some of the functions in this repo. The variables "fwkstrs", "fwkdis", "freldis" relate to work stress, work dissatisfaction, and relationship dissatisfaction respectively.
 
