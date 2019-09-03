@@ -489,9 +489,9 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   
   #save results, models and the formatted data frame
   
-  list2return <- list( results, models, formatted_data)
+  list2return <- list( results, models, formatted_data, contempDat)
   
-  names(list2return) <- c("results", "models", "data")
+  names(list2return) <- c("results", "models", "data", "residuals")
   
   return(list2return)
   
