@@ -453,12 +453,21 @@ mlVAR00 <- function(dat, scale = FALSE, variables = NULL, ID = NULL, temporal = 
   #get cors and pcors for contemporaneous network
   # from https://github.com/SachaEpskamp/mlVAR
   
+  # D <- diag(1/sapply(contempModels,sigma)^2)
+  # 
+  # inv <- D %*% (diag(length(varNames)) - contempMeanMat)
+  # 
+  # inv <- (inv + t(inv))/2
+  # 
+  # inv <- forcePositive(inv)
+  
   D <- diag(1/sapply(contempModels,sigma)^2)
   
+  # Inverse estimate:
   inv <- D %*% (diag(length(varNames)) - contempMeanMat)
   
+  # Average:
   inv <- (inv + t(inv))/2
-  
   inv <- forcePositive(inv)
   
   contemp_cov <- corpcor::pseudoinverse(inv)
